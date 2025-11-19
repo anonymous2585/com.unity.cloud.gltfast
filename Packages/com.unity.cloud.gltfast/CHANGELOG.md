@@ -58,6 +58,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Broken consistency check between image data URI mediatype against image's mimeType.
+- Support for obsolete Hybrid Renderer (com.unity.rendering.hybrid).
 
 ## [6.14.1] - 2025-09-30
 

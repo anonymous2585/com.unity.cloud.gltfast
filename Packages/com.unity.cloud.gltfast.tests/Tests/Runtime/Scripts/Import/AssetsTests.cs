@@ -8,7 +8,7 @@ using System.IO;
 using System.Threading.Tasks;
 using GLTFast.Logging;
 using NUnit.Framework;
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
 using Unity.Entities;
 using Unity.Transforms;
 #endif
@@ -178,18 +178,11 @@ namespace GLTFast.Tests.Import
             Transform transform
             )
         {
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             var sceneArchetype = entityManager.CreateArchetype(
-#if UNITY_ENTITIES_GRAPHICS
                 typeof(LocalTransform),
                 typeof(LocalToWorld)
-#else
-                typeof(Translation),
-                typeof(Rotation),
-                typeof(Scale),
-                typeof(LocalToWorld)
-#endif
             );
             var sceneRoot = entityManager.CreateEntity(sceneArchetype);
             return new EntityInstantiator(gltf, sceneRoot, logger);

@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the glTFast authors
 // SPDX-License-Identifier: Apache-2.0
 
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
 
 using System.IO;
 using System.Threading.Tasks;
@@ -112,27 +112,14 @@ namespace GLTFast {
         protected override IInstantiator GetDefaultInstantiator(ICodeLogger logger) {
             var entityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             var sceneArchetype = entityManager.CreateArchetype(
-#if UNITY_DOTS_HYBRID
-                typeof(Translation),
-                typeof(Rotation),
-                typeof(Scale),
-                typeof(LocalToWorld)
-#else
                 typeof(LocalTransform),
                 typeof(LocalToWorld)
-#endif
                 // typeof(LinkedEntityGroup)
             );
             m_SceneRoot = entityManager.CreateEntity(sceneArchetype);
 #if UNITY_EDITOR
             entityManager.SetName(m_SceneRoot, string.IsNullOrEmpty(name) ? "glTF" : name);
 #endif
-#if UNITY_DOTS_HYBRID
-            entityManager.SetComponentData(m_SceneRoot,new Translation {Value = transform.position});
-            entityManager.SetComponentData(m_SceneRoot,new Rotation {Value = transform.rotation});
-            entityManager.SetComponentData(m_SceneRoot,new Scale {Value = transform.localScale.x});
-            // entityManager.AddBuffer<LinkedEntityGroup>(sceneRoot);
-#else
             var transformCached = transform;
             entityManager.SetComponentData(
                 m_SceneRoot,
@@ -143,7 +130,6 @@ namespace GLTFast {
                     Scale = transformCached.localScale.x,
                 });
             entityManager.SetComponentData(m_SceneRoot, new LocalToWorld{Value = float4x4.identity});
-#endif
             return new EntityInstantiator(Importer, m_SceneRoot, logger, instantiationSettings);
         }
 
@@ -191,4 +177,4 @@ namespace GLTFast {
         }
     }
 }
-#endif // UNITY_DOTS_HYBRID
+#endif // UNITY_ENTITIES_GRAPHICS

@@ -55,7 +55,7 @@ namespace GLTFast.Tests.Import
         [GltfTestCase("glTF-test-models", 1, k_TestAsset)]
         public IEnumerator GltfEntityAsset(GltfTestCaseSet testCaseSet, GltfTestCase testCase)
         {
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
             var task = LoadGltfViaComponent<GltfEntityAsset>(
                 Path.Combine(testCaseSet.RootPath, testCase.relativeUri),
                 asset => asset.LoadOnStartup = false

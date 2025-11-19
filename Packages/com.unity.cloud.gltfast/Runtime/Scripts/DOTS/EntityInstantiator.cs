@@ -1,7 +1,7 @@
 // SPDX-FileCopyrightText: 2023 Unity Technologies and the glTFast authors
 // SPDX-License-Identifier: Apache-2.0
 
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
 
 using System;
 using System.Collections.Generic;
@@ -63,25 +63,13 @@ namespace GLTFast {
             m_EntityManager = World.DefaultGameObjectInjectionWorld.EntityManager;
             m_NodeArchetype = m_EntityManager.CreateArchetype(
                 typeof(Disabled),
-#if UNITY_DOTS_HYBRID
-                typeof(Translation),
-                typeof(Rotation),
-                typeof(LocalToParent),
-#else
                 typeof(LocalTransform),
-#endif
                 typeof(Parent),
                 typeof(LocalToWorld)
             );
             m_SceneArchetype = m_EntityManager.CreateArchetype(
                 typeof(Disabled),
-#if UNITY_DOTS_HYBRID
-                typeof(Translation),
-                typeof(Rotation),
-                typeof(LocalToWorld)
-#else
                 typeof(LocalTransform)
-#endif
             );
 
             if (m_Settings.SceneObjectCreation == SceneObjectCreation.Never
@@ -90,13 +78,8 @@ namespace GLTFast {
             }
             else {
                 var sceneEntity = m_EntityManager.CreateEntity(m_Parent==Entity.Null ? m_SceneArchetype : m_NodeArchetype);
-#if UNITY_DOTS_HYBRID
-                m_EntityManager.SetComponentData(sceneEntity,new Translation {Value = new float3(0,0,0)});
-                m_EntityManager.SetComponentData(sceneEntity,new Rotation {Value = quaternion.identity});
-#else
                 m_EntityManager.SetComponentData(sceneEntity,LocalTransform.Identity);
                 m_EntityManager.SetComponentData(sceneEntity, new LocalToWorld{Value = float4x4.identity});
-#endif
 #if UNITY_EDITOR
                 m_EntityManager.SetName(sceneEntity, name ?? "Scene");
 #endif
@@ -127,11 +110,6 @@ namespace GLTFast {
         ) {
             Profiler.BeginSample("CreateNode");
             var node = m_EntityManager.CreateEntity(m_NodeArchetype);
-#if UNITY_DOTS_HYBRID
-            m_EntityManager.SetComponentData(node,new Translation {Value = position});
-            m_EntityManager.SetComponentData(node,new Rotation {Value = rotation});
-            SetEntityScale(node, scale);
-#else
             var isUniformScale = IsUniform(scale);
             m_EntityManager.SetComponentData(
                 node,
@@ -150,7 +128,6 @@ namespace GLTFast {
                     new PostTransformMatrix { Value = float4x4.Scale(scale) }
                     );
             }
-#endif
             m_Nodes[nodeIndex] = node;
             m_EntityManager.SetComponentData(
                 node,
@@ -160,18 +137,6 @@ namespace GLTFast {
                 );
             Profiler.EndSample();
         }
-
-#if UNITY_DOTS_HYBRID
-        void SetEntityScale(Entity node, Vector3 scale) {
-            if (!scale.Equals(Vector3.one)) {
-                if (Math.Abs(scale.x - scale.y) < k_Epsilon && Math.Abs(scale.x - scale.z) < k_Epsilon) {
-                    m_EntityManager.AddComponentData(node, new Scale { Value = scale.x });
-                } else {
-                    m_EntityManager.AddComponentData(node, new NonUniformScale { Value = scale });
-                }
-            }
-        }
-#endif
 
         public void SetNodeName(uint nodeIndex, string name) {
 #if UNITY_EDITOR
@@ -199,51 +164,10 @@ namespace GLTFast {
                 node = m_Nodes[nodeIndex];
             } else {
                 node = m_EntityManager.CreateEntity(m_NodeArchetype);
-#if UNITY_DOTS_HYBRID
-                m_EntityManager.SetComponentData(node,new Translation {Value = new float3(0,0,0)});
-                m_EntityManager.SetComponentData(node,new Rotation {Value = quaternion.identity});
-#else
                 m_EntityManager.SetComponentData(node,LocalTransform.Identity);
-#endif
                 m_EntityManager.SetComponentData(node, new Parent { Value = m_Nodes[nodeIndex] });
             }
 
-#if UNITY_DOTS_HYBRID
-            var hasMorphTargets = meshResult.mesh.blendShapeCount > 0;
-
-            for (var index = 0; index < meshResult.materialIndices.Length; index++) {
-                var material = m_Gltf.GetMaterial(meshResult.materialIndices[index]) ?? m_Gltf.GetDefaultMaterial();
-
-                RenderMeshUtility.AddComponents(
-                    node,
-                    m_EntityManager,
-                    new RenderMeshDescription(
-                        meshResult.mesh,
-                        material,
-                        layer:m_Settings.Layer,
-                        subMeshIndex:index
-                        )
-                    );
-
-                 if(joints!=null || hasMorphTargets) {
-                     if (joints != null) {
-                         var bones = new Entity[joints.Length];
-                         for (var j = 0; j < bones.Length; j++)
-                         {
-                             var jointIndex = joints[j];
-                             bones[j] = m_Nodes[jointIndex];
-                         }
-                         // TODO: Store bone entities array somewhere (pendant to SkinnedMeshRenderer.bones)
-                     }
-                     // if (morphTargetWeights!=null) {
-                     //     for (var i = 0; i < morphTargetWeights.Length; i++) {
-                     //         var weight = morphTargetWeights[i];
-                     //         // TODO set blend shape weight in proper component (pendant to SkinnedMeshRenderer.SetBlendShapeWeight(i, weight); )
-                     //     }
-                     // }
-                 }
-            }
-#else
             var materials = new Material[meshResult.materialIndices.Length];
             for (var index = 0; index < meshResult.materialIndices.Length; index++)
             {
@@ -284,7 +208,6 @@ namespace GLTFast {
                 m_EntityManager.SetComponentData(node, new RenderBounds {Value = meshResult.mesh.bounds.ToAABB()} );
             }
 
-#endif
             Profiler.EndSample();
         }
 
@@ -303,32 +226,6 @@ namespace GLTFast {
                 return;
             }
             Profiler.BeginSample("AddPrimitiveInstanced");
-#if UNITY_DOTS_HYBRID
-            foreach (var materialIndex in meshResult.materialIndices) {
-                var material = m_Gltf.GetMaterial(materialIndex) ?? m_Gltf.GetDefaultMaterial();
-                material.enableInstancing = true;
-                var renderMeshDescription = new RenderMeshDescription(
-                    meshResult.mesh,
-                    material,
-                    subMeshIndex:materialIndex
-                    );
-                var prototype = m_EntityManager.CreateEntity(m_NodeArchetype);
-                RenderMeshUtility.AddComponents(prototype,m_EntityManager,renderMeshDescription);
-                if (scales.HasValue) {
-                    m_EntityManager.AddComponent<NonUniformScale>(prototype);
-                }
-                for (var i = 0; i < instanceCount; i++) {
-                    var instance = i>0 ? m_EntityManager.Instantiate(prototype) : prototype;
-                    m_EntityManager.SetComponentData(instance,new Translation {Value = positions?[i] ?? Vector3.zero });
-                    m_EntityManager.SetComponentData(instance,new Rotation {Value = rotations?[i] ?? Quaternion.identity});
-                    m_EntityManager.SetComponentData(instance, new Parent { Value = m_Nodes[nodeIndex] });
-                    if (scales.HasValue) {
-                        m_EntityManager.SetComponentData(instance, new NonUniformScale() { Value = scales.Value[i] });
-                    }
-                }
-            }
-#else
-
             var materials = new Material[meshResult.materialIndices.Length];
             for (var index = 0; index < meshResult.materialIndices.Length; index++)
             {
@@ -398,7 +295,6 @@ namespace GLTFast {
                 }
 
             }
-#endif
             Profiler.EndSample();
         }
 
@@ -439,4 +335,4 @@ namespace GLTFast {
     }
 }
 
-#endif // UNITY_DOTS_HYBRID
+#endif // UNITY_ENTITIES_GRAPHICS

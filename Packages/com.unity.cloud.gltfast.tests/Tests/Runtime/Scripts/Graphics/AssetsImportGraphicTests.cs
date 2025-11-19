@@ -76,7 +76,7 @@ namespace GLTFast.Tests.Graphics
 
         private async Task RunTestCaseAsync(GltfTestCaseSet testCaseSet, GltfTestCase testCase, ViewType view)
         {
-#if UNITY_ENTITIES_GRAPHICS || UNITY_DOTS_HYBRID
+#if UNITY_ENTITIES_GRAPHICS
             Assert.Ignore("Graphics tests are not implemented with Entities.");
 #endif
             // Create GameObject root for imported glTF scene
