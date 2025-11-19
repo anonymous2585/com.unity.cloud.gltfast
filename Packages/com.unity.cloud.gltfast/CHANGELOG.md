@@ -10,9 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - (Performance) Import mesh indices as unsigned integers and don't convert to signed integers anymore.
+- (Performance) Limited copy buffer size, so that garbage allocations do not scale with glTF-Binary content size anymore (when loading from file or `Stream`).
+- (Performance) Large glTF-Binary content is now loaded into memory in smaller chunks, which keeps the frame rate smooth (when loading from file or `Stream`).
+- (Performance) Shift loading glTF-Binary from stream to memory to a background thread, if it won't likely fit within the current update loop.
+- (Performance) glTF-Binary buffers are not initialized with zeros before population.
 - [meshoptimizer mesh compression for Unity] minimum required version was raised to 0.2.0-exp.1.
 
 ### Fixed
+- Returning a proper error for glTF-Binary with a content length shorter than what's depicted in the header.
 
 ### Removed
 
@@ -162,7 +167,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [6.10.2] - 2025-02-03
 
 ### Added
-- (Importer) *Textures Readable* checkbox in the imnporter inspector (*Textures* section).
+- (Importer) *Textures Readable* checkbox in the importer inspector (*Textures* section).
 - (Export) Error message when attempting to export with unsupported meshopt compression.
 - (Tests) Runtime import performance tests.
 - (Tests) Procedurally generated glTFs for testing purpose.

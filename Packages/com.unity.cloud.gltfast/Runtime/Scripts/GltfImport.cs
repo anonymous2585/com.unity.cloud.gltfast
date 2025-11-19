@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #if !UNITY_WEBGL || UNITY_EDITOR
+// Depicts whether managed scripting threads are available.
 #define GLTFAST_THREADS
 #endif
 
@@ -44,6 +45,7 @@ using Meshoptimizer;
 #endif
 using Unity.Collections.LowLevel.Unsafe;
 using Unity.Collections;
+using Unity.IO.LowLevel.Unsafe;
 using Unity.Jobs;
 using Unity.Mathematics;
 #if UNITY_EDITOR
@@ -151,6 +153,20 @@ namespace GLTFast
 #else
             150_000_000;
 #endif
+
+        /// <summary>Anticipated memory copy speed in bytes per second</summary>
+        const uint k_MemCopySpeed =
+#if UNITY_EDITOR
+            1_500_000_000;
+#else
+            3_000_000_000;
+#endif
+
+        /// <summary>
+        /// A buffer size of 81920 bytes (System.IO.Pipeline's default) seems to be a good trade-off between
+        /// throughput and managed memory allocation.
+        /// </summary>
+        const uint k_CopyBufferSize = 81_920;
 
         const string k_PrimitiveName = "Primitive";
 
@@ -556,11 +572,32 @@ namespace GLTFast
                     Logger?.Error("glb exceeds 2GB limit.");
                     return false;
                 }
-                using var data = new NativeArray<byte>((int)length, Allocator.Persistent);
-                var dataStream = data.ToUnmanagedMemoryStream();
-                await dataStream.WriteAsync(firstBytes, cancellationToken);
-                await dataStream.WriteAsync(glbHeader, cancellationToken);
-                await stream.CopyToAsync(dataStream, (int)(length - dataStream.Position), cancellationToken);
+                if (length > stream.Length)
+                {
+                    Logger?.Error(LogCode.UnexpectedEndOfContent);
+                    return false;
+                }
+                using var data = new NativeArray<byte>(
+                    (int)length, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+                using var manager = new NativeMemoryManager<byte>(data);
+                var mem = manager.Memory;
+                firstBytes.CopyTo(mem);
+                mem = mem[firstBytes.Length..];
+                glbHeader.CopyTo(mem);
+                mem = mem[glbHeader.Length..];
+
+#if GLTFAST_THREADS
+                var predictedTime = length / (float)k_MemCopySpeed;
+                if (DeferAgent.ShouldDefer(predictedTime))
+                {
+                    await Task.Run(() => CopyStreamToMemory(stream, mem), cancellationToken);
+                }
+                else
+#endif // GLTFAST_THREADS
+                {
+                    await CopyStreamToMemoryAsync(stream, mem);
+                }
+
                 var result = await LoadGltfBinaryInternal(data.AsReadOnly(), uri, importSettings, cancellationToken);
                 return result;
             }
@@ -1171,6 +1208,53 @@ namespace GLTFast
         public string GetMaterialsVariantName(int index)
         {
             return Root.GetMaterialsVariantName(index);
+        }
+
+        static void CopyStreamToMemory(Stream source, Memory<byte> destination)
+        {
+            Profiler.BeginSample("CopyStreamToMemory");
+            var bytesToWrite = destination.Length;
+            var bufferSize = math.min((int)k_CopyBufferSize, bytesToWrite);
+            var span = destination.Span;
+            int read;
+            while (bytesToWrite > 0
+                   && (read = source.Read(
+                       span[..math.min(bufferSize, bytesToWrite)]
+                       )) > 0)
+            {
+                span = span[read..];
+                bytesToWrite -= read;
+            }
+            Profiler.EndSample();
+        }
+
+        async ValueTask CopyStreamToMemoryAsync(Stream source, Memory<byte> destination)
+        {
+            Profiler.BeginSample("CopyStreamToMemoryAsync");
+            var bytesToWrite = destination.Length;
+            var bufferSize = math.min((int)k_CopyBufferSize, bytesToWrite);
+
+            var start = 0;
+            int read;
+            while (bytesToWrite > 0
+                   && (read = StreamReadToMemory(math.min(bufferSize, bytesToWrite))) > 0)
+            {
+                start += read;
+                bytesToWrite -= read;
+                if (bytesToWrite > 0 && DeferAgent.ShouldDefer(bufferSize / (float)k_MemCopySpeed))
+                {
+                    Profiler.EndSample();
+                    await Task.Yield();
+                    Profiler.BeginSample("CopyStreamToMemoryAsync");
+                }
+            }
+            Profiler.EndSample();
+            return;
+
+            int StreamReadToMemory(int length)
+            {
+                return source.Read(destination.Span[start..(start + length)]);
+            }
         }
 
         async Task<bool> LoadFromUri(Uri url, CancellationToken cancellationToken)
@@ -2185,16 +2269,24 @@ namespace GLTFast
                 return false;
             }
 
+            var totalLength = bytes.ReadUInt32(8);
+            if (totalLength > bytes.Length)
+            {
+                Logger?.Error(LogCode.UnexpectedEndOfContent);
+                Profiler.EndSample();
+                return false;
+            }
+
             int index = 12; // first chunk header
 
             var baseUri = UriHelper.GetBaseUri(uri);
 
             Profiler.EndSample();
 
-            while (index < bytes.Length)
+            while (index < totalLength)
             {
 
-                if (index + 8 > bytes.Length)
+                if (index + 8 > totalLength)
                 {
                     Logger?.Error(LogCode.ChunkIncomplete);
                     return false;
@@ -2205,7 +2297,7 @@ namespace GLTFast
                 var chType = bytes.ReadUInt32(index);
                 index += 4;
 
-                if (index + chLength > bytes.Length)
+                if (index + chLength > totalLength)
                 {
                     Logger?.Error(LogCode.ChunkIncomplete);
                     return false;
