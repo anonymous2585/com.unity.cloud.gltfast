@@ -17,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Performance) Shift loading glTF-Binary from stream to memory to a background thread, if it won't likely fit within the current update loop.
 - (Performance) glTF-Binary buffers are not initialized with zeros before population.
 - [meshoptimizer mesh compression for Unity] minimum required version was raised to 0.2.0-exp.1.
+- (Test) Updated tests dependency Graphics Test Framework (com.unity.testframework.graphics) to 8.13.1-exp.1.
 
 ### Fixed
 - Returning a proper error for glTF-Binary with a content length shorter than what's depicted in the header.
