@@ -8,6 +8,9 @@ using System.Threading.Tasks;
 using GLTFast.Logging;
 using NUnit.Framework;
 using UnityEngine;
+#if UNITY_ANDROID && !UNITY_EDITOR
+using UnityEngine.Networking;
+#endif
 using UnityEngine.TestTools;
 
 namespace GLTFast.Tests.Import
@@ -89,8 +92,16 @@ namespace GLTFast.Tests.Import
         [UnityTest]
         public IEnumerator BigFile()
         {
+            var path = TestGltfGenerator.BigCylinderBinaryPath;
+#if UNITY_ANDROID && !UNITY_EDITOR
+            // On Android streaming assets are packed in a jar file and cannot be accessed via file stream directly.
+            // So we copy the file to a temporary location first.
+            var copyTask = CopyToTempFile(path);
+            yield return AsyncWrapper.WaitForTask(copyTask);
+            path = copyTask.Result;
+#endif
             // Test copying glb from stream to memory in a thread (enforced by large content)
-            var task = Test(import => import.LoadFile(TestGltfGenerator.BigCylinderBinaryPath), true);
+            var task = Test(import => import.LoadFile(path), true);
             yield return AsyncWrapper.WaitForTask(task);
         }
 
@@ -127,5 +138,20 @@ namespace GLTFast.Tests.Import
             stream.Seek(0, SeekOrigin.Begin);
             return stream;
         }
+
+#if UNITY_ANDROID && !UNITY_EDITOR
+        static async Task<string> CopyToTempFile(string sourcePath)
+        {
+            var request = UnityWebRequest.Get(sourcePath);
+            request.SendWebRequest();
+            while (!request.isDone) await Task.Yield();
+            if (request.result != UnityWebRequest.Result.Success)
+                throw new IOException($"Failed loading URI {sourcePath}: {request.downloadHandler.text}");
+            var data = request.downloadHandler.data;
+            var destinationPath = Path.Combine(Application.temporaryCachePath, Path.GetFileName(sourcePath));
+            await File.WriteAllBytesAsync(destinationPath, data);
+            return destinationPath;
+        }
+#endif
     }
 }
