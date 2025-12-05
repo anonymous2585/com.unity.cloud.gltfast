@@ -9,6 +9,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - (Test) Test glTF asset *CylinderWithMaterial* that's procedurally generated at runtime.
 - (Test) Tests for documentation examples.
+- (Test) `OpenGltfScene` improvements.
+  - Refactored to use custom load method.
+  - Load method option to choose between loading from file or URI.
+  - Scene index option.
+  - Informative console logs with file path/URI and load time.
+  - Now works at runtime as well (without file dialog).
+  - Re-positions camera so that the loaded glTF scene is framed.
+  - Can load via [EntityInstantiator](xref:GLTFast.EntityInstantiator).
 
 ### Changed
 - (Performance) Import mesh indices as unsigned integers and don't convert to signed integers anymore.
