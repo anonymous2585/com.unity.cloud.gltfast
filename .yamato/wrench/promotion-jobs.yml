@@ -66,36 +66,6 @@ publish_cloud_gltfast:
         unzip: true
       packages:
         ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_macos
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-macos
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-macos
-        unzip: true
-      packages:
-        ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_ubuntu
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-ubuntu
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-ubuntu
-        unzip: true
-      packages:
-        ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_windows
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-windows
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-windows
-        unzip: true
-      packages:
-        ignore_artifact: true
   - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_2_-_macos
     specific_options:
       UTR:
@@ -285,36 +255,6 @@ publish_dry_run_cloud_gltfast:
         unzip: true
       pvp-results:
         location: results/pvp/validate-cloud.gltfast-2022.3.67f2-windows
-        unzip: true
-      packages:
-        ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_macos
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-macos
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-macos
-        unzip: true
-      packages:
-        ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_ubuntu
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-ubuntu
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-ubuntu
-        unzip: true
-      packages:
-        ignore_artifact: true
-  - path: .yamato/wrench/validation-jobs.yml#validate_-_cloud_gltfast_-_6000_0_-_windows
-    specific_options:
-      UTR:
-        location: results/UTR/validate-cloud.gltfast-6000.0-windows
-        unzip: true
-      pvp-results:
-        location: results/pvp/validate-cloud.gltfast-6000.0-windows
         unzip: true
       packages:
         ignore_artifact: true
