@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Emission color (emissiveFactor) is now in correct color space for shader graphs and built-in shaders.
+- Normal map scale on shader graphs.
 
 ### Removed
 
