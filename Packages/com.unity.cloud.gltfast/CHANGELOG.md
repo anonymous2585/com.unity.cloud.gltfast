@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - [PlayAutomatically](xref:GLTFast.GltfAsset.PlayAutomatically).
   - [SceneId](xref:GLTFast.GltfAsset.SceneId).
 - HDRP material validation (fixes [#561](https://github.com/atteneder/glTFast/issues/561)).
+- Various overridable shader loading methods to [MaterialGenerator](xref:GLTFast.Materials.MaterialGenerator)-based classes so users can customize shader lookup. This is useful when working with Addressables (fixes [#715](https://github.com/atteneder/glTFast/issues/715)).
+  - [MaterialGenerator.FindShader](xref:GLTFast.Materials.MaterialGenerator.FindShader(System.String)) for generic, runtime shader resolution.
+  - [BuiltInMaterialGenerator.FindShaderMetallicRoughness](xref:GLTFast.Materials.BuiltInMaterialGenerator.FindShaderMetallicRoughness).
+  - [BuiltInMaterialGenerator.FindShaderSpecularGlossiness](xref:GLTFast.Materials.BuiltInMaterialGenerator.FindShaderSpecularGlossiness).
+  - [BuiltInMaterialGenerator.FindShaderUnlit](xref:GLTFast.Materials.BuiltInMaterialGenerator.FindShaderUnlit).
+  - [ShaderGraphMaterialGenerator.LoadShaderByName](xref:GLTFast.Materials.ShaderGraphMaterialGenerator.LoadShaderByName(System.String)).
 
 ### Changed
 
