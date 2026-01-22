@@ -257,6 +257,8 @@ namespace GLTFast.Logging
         BufferContentUndersized,
         /// <summary>glTF-Binary's actual length is smaller than what the header's length field declares.</summary>
         UnexpectedEndOfContent,
+        /// <summary>The operation was canceled.</summary>
+        OperationCanceled,
     }
 
     /// <summary>
@@ -310,6 +312,7 @@ is approximated. Enable Opaque Texture access in Universal Render Pipeline!" },
             { LogCode.MissingImageURL, "Image URL missing" },
             { LogCode.MorphTargetContextFail, "Retrieving morph target failed" },
             { LogCode.NamingOverride, "Overriding naming method to be OriginalUnique (animation requirement)" },
+            { LogCode.OperationCanceled, "The operation was canceled: {0}"},
             { LogCode.PackageMissing, $"{{0}} package needs to be installed in order to support glTF extension {{1}}!\nSee {GltfGlobals.GltfPackageName}/README.md#installing for instructions" },
             { LogCode.PrimitiveModeUnsupported, "Primitive mode {0} is untested" },
             { LogCode.RemapUnsupported, "{0} remap is not fully supported" },
@@ -377,7 +380,7 @@ is approximated. Enable Opaque Texture access in Universal Render Pipeline!" },
 #endif
         }
 
-#if UNITY_EDITOR
+#if GLTFAST_REPORT
         internal static string GetRawMessage(LogCode code)
         {
             return k_FullMessages[code];

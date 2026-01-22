@@ -14,7 +14,7 @@ using Object = UnityEngine.Object;
 namespace GLTFast.Tests.Import
 {
     /// <summary>
-    /// Tests for memory leaks during loading, unloading and cancellation.
+    /// Tests for memory leaks during loading, unloading.
     /// </summary>
     [Category("Import")]
     class MemoryTests

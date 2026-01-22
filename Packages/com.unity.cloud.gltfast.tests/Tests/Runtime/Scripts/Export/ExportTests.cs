@@ -192,8 +192,7 @@ namespace GLTFast.Tests.Export
             TryFixPackageAssetPath(ref assetPath);
             var asset = AssetDatabase.LoadAssetAtPath<TextAsset>(assetPath);
             Assert.NotNull(asset, $"glTF Export ObjectList asset at {assetPath} could not be loaded.");
-            var objectNames = asset.text.Split('\n');
-            return objectNames.Where(name => !string.IsNullOrWhiteSpace(name)).ToArray();
+            return GetObjectNames(asset.text);
         }
 #endif
 
@@ -211,8 +210,16 @@ namespace GLTFast.Tests.Export
             {
                 throw new FileNotFoundException($"ObjectList for scene {sceneName} was not found at {path}: {request.error}");
             }
-            var objectNames = request.downloadHandler.text.Split('\n');
-            return objectNames.Where(name => !string.IsNullOrWhiteSpace(name)).ToArray();
+            return GetObjectNames(request.downloadHandler.text);
+        }
+
+        static string[] GetObjectNames(string input)
+        {
+            var objectNames = input.Split('\n');
+            return objectNames
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Select(name => name.Replace("\r", ""))
+                .ToArray();
         }
 
         [OneTimeSetUp]

@@ -5,6 +5,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using GLTFast.Logging;
 using NUnit.Framework;
@@ -126,17 +128,24 @@ namespace GLTFast.Tests.Import
             yield return AsyncWrapper.WaitForTask(RunTestCase(testCaseSet, testCase));
         }
 
-        internal static async Task RunTestCase(GltfTestCaseSet testCaseSet, GltfTestCase testCase)
+        internal static async Task RunTestCase(GltfTestCaseSet testCaseSet, GltfTestCase testCase, bool logLoadingMessage = true, CancellationToken cancellationToken = default)
         {
 
             AssertRequiredExtensions(testCase.requiredExtensions);
             var deferAgent = new UninterruptedDeferAgent();
             var loadLogger = new CollectingLogger();
             var path = Path.Combine(testCaseSet.RootPath, testCase.relativeUri);
-            Debug.Log($"Loading {testCase} from {path}");
+            if (logLoadingMessage)
+                Debug.Log($"Loading {testCase} from {path}");
 
             using var gltf = new GltfImport(deferAgent: deferAgent, logger: loadLogger);
-            var success = await gltf.Load(path);
+            var success = await gltf.Load(path, cancellationToken: cancellationToken);
+            if (loadLogger.Items?.Any(x => x.Code == LogCode.OperationCanceled) is true)
+            {
+                if (success)
+                    throw new AssertionException("glTF import unexpectedly succeeded despite cancellation!");
+                return;
+            }
             if (success ^ !testCase.expectLoadFail)
             {
                 AssertLoggers(new[] { loadLogger }, testCase);
@@ -166,7 +175,14 @@ namespace GLTFast.Tests.Import
 #else
                     new GameObjectInstantiator(gltf, go.transform, instantiateLogger);
 #endif
-                success = await gltf.InstantiateMainSceneAsync(instantiator);
+                success = await gltf.InstantiateMainSceneAsync(instantiator, cancellationToken);
+                if (loadLogger.Items?.Any(x => x.Code == LogCode.OperationCanceled) is true
+                    || instantiateLogger.Items?.Any(x => x.Code == LogCode.OperationCanceled) is true)
+                {
+                    if (success)
+                        throw new AssertionException("glTF instantiation unexpectedly succeeded despite cancellation!");
+                    return;
+                }
                 if (!success)
                 {
                     instantiateLogger.LogAll();
@@ -180,7 +196,11 @@ namespace GLTFast.Tests.Import
             finally
             {
 #if !UNITY_ENTITIES_GRAPHICS
+#if UNITY_EDITOR
+                UnityEngine.Object.DestroyImmediate(go);
+#else
                 UnityEngine.Object.Destroy(go);
+#endif // UNITY_EDITOR
 #else
                 var entityManager = s_World.EntityManager;
                 EntityUtils.DestroyChildren(ref s_SceneRoot, ref entityManager);
