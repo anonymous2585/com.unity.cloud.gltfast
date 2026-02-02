@@ -15,7 +15,7 @@ namespace GLTFast.Tests
             var v = new byte3(128, 64, 32);
             Assert.AreEqual(new float3(-128, 64, 32), v.GltfToUnityFloat3());
             Utils.AssertNearOrEqual(new float3(-.5f, .25f, .125f), v.GltfToUnityNormalizedFloat3(), Constants.epsilonUInt8);
-            Assert.AreEqual(new int3(128, 32, 64), v.GltfToUnityTriangleIndies());
+            Assert.AreEqual(new uint3(128, 32, 64), v.GltfToUnityTriangleIndies());
         }
 
         [Test]

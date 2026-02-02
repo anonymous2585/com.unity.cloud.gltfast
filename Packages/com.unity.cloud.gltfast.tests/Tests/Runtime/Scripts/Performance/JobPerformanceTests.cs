@@ -1352,10 +1352,10 @@ namespace GLTFast.Tests.Performance.Jobs
             Assert.Ignore("Skipping performance tests (scripting define RUN_PERFORMANCE_TESTS is not set).");
 #endif
             Assert.IsTrue(m_IndexOutput.Length % 3 == 0);
-            var job = new GLTFast.Jobs.ConvertIndicesUInt8ToInt32FlippedJob
+            var job = new GLTFast.Jobs.ConvertIndicesUInt8ToUInt32FlippedJob
             {
                 input = m_InputUInt8.Reinterpret<byte3>(UnsafeUtility.SizeOf<byte>()).AsReadOnly(),
-                result = m_IndexOutput.Reinterpret<int3>(sizeof(int))
+                result = m_IndexOutput.Reinterpret<uint3>(sizeof(uint))
             };
             Measure.Method(() => job.Run(m_IndexOutput.Length / 3))
                 .WarmupCount(1)
@@ -1370,10 +1370,10 @@ namespace GLTFast.Tests.Performance.Jobs
             Assert.Ignore("Skipping performance tests (scripting define RUN_PERFORMANCE_TESTS is not set).");
 #endif
             Assert.IsTrue(m_IndexOutput.Length % 3 == 0);
-            var job = new GLTFast.Jobs.ConvertIndicesUInt16ToInt32FlippedJob
+            var job = new GLTFast.Jobs.ConvertIndicesUInt16ToUInt32FlippedJob
             {
                 input = m_InputUInt16.Reinterpret<ushort3>(UnsafeUtility.SizeOf<ushort>()).AsReadOnly(),
-                result = m_IndexOutput.Reinterpret<int3>(sizeof(int))
+                result = m_IndexOutput.Reinterpret<uint3>(sizeof(uint))
             };
             Measure.Method(() => job.Run(m_IndexOutput.Length / 3))
                 .WarmupCount(1)
@@ -1406,10 +1406,10 @@ namespace GLTFast.Tests.Performance.Jobs
             Assert.Ignore("Skipping performance tests (scripting define RUN_PERFORMANCE_TESTS is not set).");
 #endif
             Assert.IsTrue(m_IndexOutput.Length % 3 == 0);
-            var job = new GLTFast.Jobs.ConvertIndicesUInt32ToInt32FlippedJob
+            var job = new GLTFast.Jobs.ConvertIndicesUInt32ToUInt32FlippedJob
             {
                 input = m_InputUInt32.Reinterpret<uint3>(UnsafeUtility.SizeOf<uint>()).AsReadOnly(),
-                result = m_IndexOutput.Reinterpret<int3>(sizeof(int))
+                result = m_IndexOutput.Reinterpret<uint3>(sizeof(uint))
             };
             Measure.Method(() => job.Run(m_IndexOutput.Length / 3))
                 .WarmupCount(1)

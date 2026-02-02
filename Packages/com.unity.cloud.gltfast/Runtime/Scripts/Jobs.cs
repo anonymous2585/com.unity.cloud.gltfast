@@ -432,13 +432,13 @@ namespace GLTFast.Jobs
     }
 
     [BurstCompile]
-    struct ConvertIndicesUInt8ToInt32FlippedJob : IJobParallelFor
+    struct ConvertIndicesUInt8ToUInt32FlippedJob : IJobParallelFor
     {
         [ReadOnly]
         public NativeArray<byte3>.ReadOnly input;
 
         [WriteOnly]
-        public NativeArray<int3> result;
+        public NativeArray<uint3> result;
 
         public void Execute(int index)
         {
@@ -447,13 +447,13 @@ namespace GLTFast.Jobs
     }
 
     [BurstCompile]
-    struct ConvertIndicesUInt16ToInt32FlippedJob : IJobParallelFor
+    struct ConvertIndicesUInt16ToUInt32FlippedJob : IJobParallelFor
     {
         [ReadOnly]
         public NativeArray<ushort3>.ReadOnly input;
 
         [WriteOnly]
-        public NativeArray<int3> result;
+        public NativeArray<uint3> result;
 
         public void Execute(int index)
         {
@@ -477,18 +477,18 @@ namespace GLTFast.Jobs
     }
 
     [BurstCompile]
-    struct ConvertIndicesUInt32ToInt32FlippedJob : IJobParallelFor
+    struct ConvertIndicesUInt32ToUInt32FlippedJob : IJobParallelFor
     {
         [ReadOnly]
         public NativeArray<uint3>.ReadOnly input;
 
         [WriteOnly]
-        public NativeArray<int3> result;
+        public NativeArray<uint3> result;
 
         public void Execute(int index)
         {
             var idx = input[index];
-            result[index] = new int3((int)idx.x, (int)idx.z, (int)idx.y);
+            result[index] = new uint3(idx.x, idx.z, idx.y);
         }
     }
 

@@ -510,10 +510,10 @@ namespace GLTFast
                 {
                     if (flip)
                     {
-                        var job8 = new ConvertIndicesUInt8ToInt32FlippedJob
+                        var job8 = new ConvertIndicesUInt8ToUInt32FlippedJob
                         {
                             input = accessorData.Reinterpret<byte3>().AsNativeArrayReadOnly(),
-                            result = indices.Reinterpret<int3>(sizeof(int))
+                            result = indices.Reinterpret<uint3>(sizeof(uint))
                         };
                         jobHandle = job8.Schedule(accessor.count / 3, GltfImportBase.DefaultBatchCount);
                     }
@@ -532,10 +532,10 @@ namespace GLTFast
                 {
                     if (flip)
                     {
-                        var job16 = new ConvertIndicesUInt16ToInt32FlippedJob
+                        var job16 = new ConvertIndicesUInt16ToUInt32FlippedJob
                         {
                             input = accessorData.Reinterpret<ushort3>().AsNativeArrayReadOnly(),
-                            result = indices.Reinterpret<int3>(sizeof(int))
+                            result = indices.Reinterpret<uint3>(sizeof(uint))
                         };
                         jobHandle = job16.Schedule(accessor.count / 3, GltfImportBase.DefaultBatchCount);
                     }
@@ -554,10 +554,10 @@ namespace GLTFast
                 {
                     if (flip)
                     {
-                        var job32 = new ConvertIndicesUInt32ToInt32FlippedJob
+                        var job32 = new ConvertIndicesUInt32ToUInt32FlippedJob
                         {
                             input = accessorData.Reinterpret<uint3>().AsNativeArrayReadOnly(),
-                            result = indices.Reinterpret<int3>(sizeof(int))
+                            result = indices.Reinterpret<uint3>(sizeof(uint))
                         };
                         jobHandle = job32.Schedule(accessor.count / 3, GltfImportBase.DefaultBatchCount);
                     }
