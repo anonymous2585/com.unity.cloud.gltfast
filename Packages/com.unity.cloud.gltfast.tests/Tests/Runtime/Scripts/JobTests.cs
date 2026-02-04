@@ -1356,15 +1356,15 @@ namespace GLTFast.Tests.Jobs
 
         void CheckResultTriangleStrip()
         {
-            Assert.AreEqual(1, m_IndexOutput[0]);
-            Assert.AreEqual(0, m_IndexOutput[1]);
-            Assert.AreEqual(2, m_IndexOutput[2]);
-            Assert.AreEqual(3, m_IndexOutput[3]);
-            Assert.AreEqual(1, m_IndexOutput[4]);
-            Assert.AreEqual(2, m_IndexOutput[5]);
-            Assert.AreEqual(3, m_IndexOutput[6]);
-            Assert.AreEqual(2, m_IndexOutput[7]);
-            Assert.AreEqual(4, m_IndexOutput[8]);
+            Assert.AreEqual(0, m_IndexOutput[0]);
+            Assert.AreEqual(2, m_IndexOutput[1]);
+            Assert.AreEqual(1, m_IndexOutput[2]);
+            Assert.AreEqual(1, m_IndexOutput[3]);
+            Assert.AreEqual(2, m_IndexOutput[4]);
+            Assert.AreEqual(3, m_IndexOutput[5]);
+            Assert.AreEqual(2, m_IndexOutput[6]);
+            Assert.AreEqual(4, m_IndexOutput[7]);
+            Assert.AreEqual(3, m_IndexOutput[8]);
         }
 
         [Test]
@@ -1486,30 +1486,28 @@ namespace GLTFast.Tests.Jobs
         }
 
         [Test]
-        public void RecalculateIndicesForTriangleFanJob()
+        public void RecalculateIndicesForTriangleFanInPlaceJob()
         {
             Assert.IsTrue(m_IndexOutput.Length > 3);
-            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleFanJob
+            NativeArray<uint>.Copy(m_InputUInt32, m_IndexOutput, m_InputUInt32.Length);
+            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleFanInPlaceJob<uint>
             {
-                input = m_InputUInt32,
-                result = m_IndexOutput
+                indices = m_IndexOutput
             };
-            var triangleCount = m_IndexOutput.Length / 3;
-            job.Run(triangleCount);
+            job.Run();
             CheckResultTriangleFan();
         }
 
         [Test]
-        public void RecalculateIndicesForTriangleStripJob()
+        public void RecalculateIndicesForTriangleStripInPlaceJob()
         {
             Assert.IsTrue(m_IndexOutput.Length > 3);
-            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleStripJob
+            NativeArray<uint>.Copy(m_InputUInt32, m_IndexOutput, m_InputUInt32.Length);
+            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleStripInPlaceJob<uint>
             {
-                input = m_InputUInt32,
-                result = m_IndexOutput
+                indices = m_IndexOutput
             };
-            var triangleCount = m_IndexOutput.Length / 3;
-            job.Run(triangleCount);
+            job.Run();
             CheckResultTriangleStrip();
         }
     }

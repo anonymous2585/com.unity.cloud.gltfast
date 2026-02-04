@@ -336,9 +336,9 @@ namespace GLTFast.Jobs
             var triangleIndex = index / 3;
             result[index] = (index % 3) switch
             {
-                0 => (uint)(triangleIndex + (1 + triangleIndex % 2)),
-                1 => (uint)(triangleIndex),
-                2 => (uint)(triangleIndex + (2 - triangleIndex % 2)),
+                0 => (uint)triangleIndex,
+                1 => (uint)(triangleIndex + 2 - triangleIndex % 2),
+                2 => (uint)(triangleIndex + 1 + triangleIndex % 2),
                 _ => result[index]
             };
         }
@@ -369,50 +369,41 @@ namespace GLTFast.Jobs
     }
 
     [BurstCompile]
-    struct RecalculateIndicesForTriangleStripJob : IJobParallelFor
+    struct RecalculateIndicesForTriangleStripInPlaceJob<T> : IJob where T : struct
     {
-        [ReadOnly]
-        public NativeArray<uint> input;
+        public NativeArray<T> indices;
 
-        [WriteOnly, NativeDisableParallelForRestriction]
-        public NativeArray<uint> result;
-
-        public void Execute(int index)
+        public void Execute()
         {
-            // Source https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
-            // Triangle Strips
-            // One triangle primitive is defined by each vertex and the two vertices that follow it, according to the equation:
-            // pi = { vi, vi + (1 + i % 2), vi + (2 - i % 2)}
-            // We change first and second indices for Unity
-
-            var triangleIndex = index * 3;
-            result[triangleIndex + 1] = input[index];
-            result[triangleIndex] = input[index + (1 + index % 2)];
-            result[triangleIndex + 2] = input[index + (2 - index % 2)];
+            var lastTriangleIndex = indices.Length / 3 - 1;
+            for (var i = lastTriangleIndex; i > 0; i--)
+            {
+                var mod = i % 2;
+                indices[i * 3 + 1 + mod] = indices[2 + i];
+                indices[i * 3 + 2 - mod] = indices[1 + i];
+                indices[i * 3] = indices[i];
+            }
+            (indices[2], indices[1]) = (indices[1], indices[2]);
         }
     }
 
     [BurstCompile]
-    struct RecalculateIndicesForTriangleFanJob : IJobParallelFor
+    struct RecalculateIndicesForTriangleFanInPlaceJob<T> : IJob where T : struct
     {
-        [ReadOnly]
-        public NativeArray<uint> input;
+        public NativeArray<T> indices;
 
-        [WriteOnly, NativeDisableParallelForRestriction]
-        public NativeArray<uint> result;
-
-        public void Execute(int index)
+        public void Execute()
         {
-            // Source https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html
-            // Triangle Fans
-            // Triangle primitives are defined around a shared common vertex, according to the equation:
-            // pi = {vi+1, vi+2, v0}
-            // We change first and second indices for Unity
-
-            var triangleIndex = index * 3;
-            result[triangleIndex + 1] = input[index + 1];
-            result[triangleIndex] = input[index + 2];
-            result[triangleIndex + 2] = 0;
+            var triangleCount = indices.Length / 3;
+            var pivot = indices[0];
+            for (var i = triangleCount - 1; i > 0; i--)
+            {
+                var triangleIndex = i * 3;
+                indices[triangleIndex + 2] = pivot;
+                indices[triangleIndex + 1] = indices[i + 1];
+                indices[triangleIndex] = indices[i + 2];
+            }
+            (indices[2], indices[0]) = (indices[0], indices[2]);
         }
     }
 

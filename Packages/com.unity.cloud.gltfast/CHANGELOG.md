@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Replaced the generic [StandardMaterialExport](xref:GLTFast.Export.StandardMaterialExport) with specializations.
   - [LitMaterialExport](xref:GLTFast.Export.LitMaterialExport) for Universal Render Pipeline Lit shader material export.
   - [BuiltInStandardMaterialExport](xref:GLTFast.Export.BuiltInStandardMaterialExport) for Built-in Render Pipeline Standard shader material export.
+- (Performance) Improved performance of mesh indices conversion for draw modes line loop, triangle strips and triangle fan.
 
 ### Fixed
 - [GltfImport.InstantiateSceneAsync](xref:GLTFast.GltfImportBase.InstantiateSceneAsync*) properly handles an invalid scene index parameter.
@@ -27,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - (Export) When a Lit/Standard material has a smoothness texture, their smoothness value is baked into the resulting roughness channel (of the ORM map). This preserves the visual appearance, but is a lossy operation if the smoothness value is not `1.0` (fixes [#795](https://github.com/atteneder/glTFast/issues/795) and [796](https://github.com/atteneder/glTFast/issues/796)).
 - (Export) `MetaMaterialExportBuiltIn` is used for built-in material export (unless `GLTFAST_BUILTIN_SHADER_GRAPH` is set).
 - (Import) Solved exception when scenes with no nodes are loaded.
+- (Import) Triangle fan meshes with the center vertex not being the first vertex import correctly now.
 
 ### Removed
 

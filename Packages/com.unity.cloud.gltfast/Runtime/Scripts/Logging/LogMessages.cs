@@ -259,6 +259,8 @@ namespace GLTFast.Logging
         UnexpectedEndOfContent,
         /// <summary>The operation was canceled.</summary>
         OperationCanceled,
+        /// <summary>Invalid index format</summary>
+        IndexCountInvalid,
     }
 
     /// <summary>
@@ -302,6 +304,7 @@ See details in corresponding issue at https://github.com/atteneder/glTFast/issue
             { LogCode.ImageFormatUnknown, "Unknown image format (image {0};uri:{1})" },
             { LogCode.ImageMultipleSamplers, "Have to create copy of image {0} due to different samplers. This is harmless, but requires more memory." },
             { LogCode.InconsistentVertexColorUsage, "Potential visual discrepancy due to inconsistent vertex colors usage on mesh {0}" },
+            { LogCode.IndexCountInvalid, "Invalid index count {0}" },
             { LogCode.IndexFormatInvalid, "Invalid index format {0}" },
             { LogCode.JsonParsingFailed, "Parsing JSON failed" },
             { LogCode.MaterialTransmissionApprox, "Chance of incorrect materials! glTF transmission is approximated when using built-in render pipeline!" },

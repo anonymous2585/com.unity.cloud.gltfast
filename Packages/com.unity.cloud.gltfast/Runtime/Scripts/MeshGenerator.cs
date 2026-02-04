@@ -24,7 +24,6 @@ namespace GLTFast
         VertexBufferGeneratorBase m_VertexData;
 
         NativeArray<uint>[] m_Indices;
-        List<IDisposable> m_Disposables;
         readonly SubMeshAssignment[] m_SubMeshAssignments;
         readonly IReadOnlyList<MeshPrimitiveBase> m_Primitives;
 
@@ -199,7 +198,40 @@ namespace GLTFast
                 if (primitive.indices >= 0)
                 {
                     var flip = primitive.mode == DrawMode.Triangles;
-                    GetIndicesJob(gltfImport, primitive.indices, out var indices, out var getIndicesJob, flip);
+                    var accessor = ((IGltfBuffers)gltfImport).GetAccessor(primitive.indices);
+
+                    var minIndexCount = 3;
+                    var indexCount = accessor.count;
+                    switch (primitive.mode)
+                    {
+                        case DrawMode.TriangleStrip or DrawMode.TriangleFan:
+                            indexCount = (accessor.count - 2) * 3;
+                            break;
+                        case DrawMode.LineLoop:
+                            minIndexCount = 2;
+                            indexCount = accessor.count + 1;
+                            break;
+                        case DrawMode.Lines or DrawMode.LineStrip:
+                            minIndexCount = 2;
+                            break;
+                        case DrawMode.Points:
+                            minIndexCount = 1;
+                            break;
+                    }
+
+                    if (accessor.count < minIndexCount)
+                    {
+                        gltfImport.Logger?.Error(
+                            LogCode.IndexCountInvalid,
+                            accessor.count.ToString()
+                        );
+                        return null;
+                    }
+
+                    var indices = new NativeArray<uint>(
+                        indexCount, Allocator.Persistent, NativeArrayOptions.UninitializedMemory);
+
+                    GetIndicesJob(gltfImport, accessor, indices, out var getIndicesJob, flip);
                     if (!getIndicesJob.HasValue)
                         return null;
 
@@ -207,63 +239,41 @@ namespace GLTFast
                     {
                         case DrawMode.LineLoop:
                         {
-                            m_Indices[subMeshIndex] = new NativeArray<uint>(indices.Length + 1, Allocator.Persistent);
-
-                            // TODO: Allocate larger index buffer right away and only set last index here
                             // Wait for indices to be ready.
                             while (!getIndicesJob.Value.IsCompleted)
                             {
                                 await Task.Yield();
                             }
-
                             getIndicesJob.Value.Complete();
 
-                            NativeArray<uint>.Copy(indices, m_Indices[subMeshIndex], indices.Length);
-                            m_Indices[subMeshIndex][indices.Length] = indices[0];
-                            indices.Dispose();
+                            indices[indices.Length - 1] = indices[0];
                             break;
                         }
                         case DrawMode.TriangleStrip:
                         {
-                            // TODO: Allocate larger index buffer right away and recalculate indices in-place.
-                            var triangleStripTriangleCount = indices.Length - 2;
-                            m_Indices[subMeshIndex] = new NativeArray<uint>(triangleStripTriangleCount * 3, Allocator.Persistent);
-                            var triangleStripJob = new RecalculateIndicesForTriangleStripJob
+                            var triangleStripJob = new RecalculateIndicesForTriangleStripInPlaceJob<uint>
                             {
-                                input = indices,
-                                result = m_Indices[subMeshIndex]
+                                indices = indices,
                             };
-                            var job = triangleStripJob.Schedule(
-                                triangleStripTriangleCount,
-                                GltfImportBase.DefaultBatchCount,
-                                getIndicesJob.Value
-                                );
+                            var job = triangleStripJob.Schedule(getIndicesJob.Value);
                             tmpList.Add(job);
-                            m_Disposables ??= new List<IDisposable>();
-                            m_Disposables.Add(indices);
                             break;
                         }
                         case DrawMode.TriangleFan:
                         {
-                            // TODO: Allocate larger index buffer right away and recalculate indices in-place.
-                            var triangleFanTriangleCount = indices.Length - 2;
-                            m_Indices[subMeshIndex] = new NativeArray<uint>(triangleFanTriangleCount * 3, Allocator.Persistent);
-                            var triangleFanJob = new RecalculateIndicesForTriangleFanJob
+                            var triangleFanJob = new RecalculateIndicesForTriangleFanInPlaceJob<uint>
                             {
-                                input = indices,
-                                result = m_Indices[subMeshIndex]
+                                indices = indices,
                             };
-                            var job = triangleFanJob.Schedule(triangleFanTriangleCount, GltfImportBase.DefaultBatchCount, getIndicesJob.Value);
-                            m_Disposables ??= new List<IDisposable>();
-                            m_Disposables.Add(indices);
+                            var job = triangleFanJob.Schedule(getIndicesJob.Value);
                             tmpList.Add(job);
                             break;
                         }
                         default:
-                            m_Indices[subMeshIndex] = indices;
                             tmpList.Add(getIndicesJob.Value);
                             break;
                     }
+                    m_Indices[subMeshIndex] = indices;
                 }
                 else
                 {
@@ -464,38 +474,23 @@ namespace GLTFast
                     m_Indices = null;
                 }
             }
-
-            if (m_Disposables != null)
-            {
-                foreach (var disposable in m_Disposables)
-                {
-                    disposable.Dispose();
-                }
-
-                m_Disposables = null;
-            }
         }
 
         static void GetIndicesJob(
             GltfImportBase gltfImport,
-            int accessorIndex,
-            out NativeArray<uint> indices,
+            AccessorBase accessor,
+            NativeArray<uint> indices,
             out JobHandle? jobHandle,
             bool flip
             )
         {
             Profiler.BeginSample("PrepareGetIndicesJob");
-            var accessor = ((IGltfBuffers)gltfImport).GetAccessor(accessorIndex);
             var accessorData = ((IGltfBuffers)gltfImport).GetBufferView(
                 accessor.bufferView,
                 out _,
                 accessor.byteOffset,
                 accessor.ByteSize
                 );
-
-            Profiler.BeginSample("Alloc");
-            indices = new NativeArray<uint>(accessor.count, Allocator.Persistent);
-            Profiler.EndSample();
 
             Assert.AreEqual(accessor.GetAttributeType(), GltfAccessorAttributeType.SCALAR);
             if (accessor.IsSparse)

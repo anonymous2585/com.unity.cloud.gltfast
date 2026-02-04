@@ -1418,38 +1418,34 @@ namespace GLTFast.Tests.Performance.Jobs
         }
 
         [Test, Performance]
-        public void RecalculateIndicesForTriangleFanJob()
+        public void RecalculateIndicesForTriangleFanInPlaceJob()
         {
 #if !RUN_PERFORMANCE_TESTS
             Assert.Ignore("Skipping performance tests (scripting define RUN_PERFORMANCE_TESTS is not set).");
 #endif
             Assert.IsTrue(m_IndexOutput.Length > 3);
-            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleFanJob
+            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleFanInPlaceJob<uint>
             {
-                input = m_InputUInt32,
-                result = m_IndexOutput
+                indices = m_IndexOutput
             };
-            var triangleCount = m_IndexOutput.Length / 3;
-            Measure.Method(() => job.Run(triangleCount))
+            Measure.Method(() => job.Run())
                 .WarmupCount(1)
                 .DynamicMeasurementCount()
                 .Run();
         }
 
         [Test, Performance]
-        public void RecalculateIndicesForTriangleStripJob()
+        public void RecalculateIndicesForTriangleStripInPlaceJob()
         {
 #if !RUN_PERFORMANCE_TESTS
             Assert.Ignore("Skipping performance tests (scripting define RUN_PERFORMANCE_TESTS is not set).");
 #endif
             Assert.IsTrue(m_IndexOutput.Length > 3);
-            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleStripJob
+            var job = new GLTFast.Jobs.RecalculateIndicesForTriangleStripInPlaceJob<uint>
             {
-                input = m_InputUInt32,
-                result = m_IndexOutput
+                indices = m_IndexOutput
             };
-            var triangleCount = m_IndexOutput.Length / 3;
-            Measure.Method(() => job.Run(triangleCount))
+            Measure.Method(() => job.Run())
                 .WarmupCount(1)
                 .DynamicMeasurementCount()
                 .Run();
