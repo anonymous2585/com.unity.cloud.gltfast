@@ -734,9 +734,9 @@ namespace GLTFast.Export
             sb.AppendFormat("{0} bytes JSON + {1} bytes buffer", jsonLength, bufferLength);
             if (m_Gltf != null) {
                 sb.AppendFormat(", {0} nodes", m_Gltf.Nodes?.Count ?? 0);
-                sb.AppendFormat(" ,{0} meshes", m_Gltf.meshes?.Length ?? 0);
-                sb.AppendFormat(" ,{0} materials", m_Gltf.Materials?.Count ?? 0);
-                sb.AppendFormat(" ,{0} images", m_Gltf.Images?.Count ?? 0);
+                sb.AppendFormat(", {0} meshes", m_Gltf.meshes?.Length ?? 0);
+                sb.AppendFormat(", {0} materials", m_Gltf.Materials?.Count ?? 0);
+                sb.AppendFormat(", {0} images", m_Gltf.Images?.Count ?? 0);
             }
             m_Logger?.Info(sb.ToString());
 #endif
