@@ -18,7 +18,7 @@ namespace GLTFast
         IMaterialProvider m_MaterialProvider;
         IReadOnlyCollection<IMaterialsVariantsSlotInstance> m_Slots;
 
-        int m_CurrentVariantIndex;
+        public int CurrentVariantIndex { get; private set; } = -1;
 
         internal MaterialsVariantsControl(IMaterialProvider materialProvider, IReadOnlyCollection<IMaterialsVariantsSlotInstance> slots)
         {
@@ -42,7 +42,7 @@ namespace GLTFast
             }
 
             await Task.WhenAll(tasks);
-            m_CurrentVariantIndex = variantIndex;
+            CurrentVariantIndex = variantIndex;
         }
 
         /// <inheritdoc cref="IMaterialProvider.MaterialsVariantsCount"/>

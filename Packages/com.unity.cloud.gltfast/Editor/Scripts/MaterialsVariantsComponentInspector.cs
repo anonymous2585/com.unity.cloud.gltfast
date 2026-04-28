@@ -18,9 +18,9 @@ namespace GLTFast.Editor
 
         public override VisualElement CreateInspectorGUI()
         {
+            var control = (target as MaterialsVariantsComponent)?.Control;
             if (m_VariantNames == null)
             {
-                var control = (target as MaterialsVariantsComponent)?.Control;
                 if (control != null)
                 {
                     var count = control.MaterialsVariantsCount;
@@ -45,7 +45,7 @@ namespace GLTFast.Editor
             else
             {
                 m_Dropdown.choices = m_VariantNames;
-                m_Dropdown.index = 0;
+                m_Dropdown.index = control != null ? control.CurrentVariantIndex + 1: 0;
                 m_Dropdown.RegisterValueChangedCallback(OnMaterialsVariantChanged);
                 myInspector.Add(m_Dropdown);
             }
